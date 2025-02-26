@@ -5,11 +5,15 @@ export function activate(context: vscode.ExtensionContext) {
   console.log("ctxtc is now active");
   const disposable = vscode.commands.registerCommand(
     "ctxtc.clipContext",
-    () => {
+    async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         return;
       }
+      const options = ['1', '2', '3'];
+      const result = await vscode.window.showQuickPick(options, {
+          placeHolder: 'Choose depth'
+      });
 
       const selection = editor.selection;
       const startLine = selection.start.line;
@@ -17,16 +21,14 @@ export function activate(context: vscode.ExtensionContext) {
 
       const document = editor.document;
       const filePath = document.uri.fsPath;
-      const depth = 1;
+      let depth: number = 1;
+      if (result && result !== undefined) {
+        depth = +result;
+      }
 
-      python("ctxclip")
-        .then((res) => {
-          return res.expand_to_markdown(filePath, startLine, endLine, depth);
-        })
-        .then((res) => {
-          vscode.env.clipboard.writeText(res);
-        });
-
+      const ctxclip = await python("ctxclip");
+      const clip = await ctxclip.expand_to_markdown(filePath, startLine, endLine, depth);
+      await vscode.env.clipboard.writeText(clip);
       vscode.window.showInformationMessage("Context Clipped!");
     }
   );
