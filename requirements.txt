@@ -1,0 +1,1 @@
+ctxclip@git+https://github.com/pdh/ctxclip@main
